@@ -1,3 +1,7 @@
 build/*
 dist/*
 nbproject/private/*
+libbulletjme.so
+liblwjgl64.so
+libopenal64.so
+master-application.jnlp
