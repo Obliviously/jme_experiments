@@ -1,13 +1,13 @@
 package mygame;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.bullet.BulletAppState;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.Ray;
+import com.jme3.math.Triangle;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
@@ -27,7 +27,6 @@ import java.util.TreeMap;
  */
 public class Main extends SimpleApplication implements AnalogListener
 {
-    private BulletAppState bulletAppState;
 
     public static void main(String[] args)
     {
@@ -43,8 +42,6 @@ public class Main extends SimpleApplication implements AnalogListener
     public void simpleInitApp()
     {
         setUpKeys();
-        bulletAppState = new BulletAppState();
-        stateManager.attach(bulletAppState);
 
         Mesh mesh = new Mesh();
 
@@ -113,7 +110,6 @@ public class Main extends SimpleApplication implements AnalogListener
         mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoord));
         mesh.setBuffer(Type.Index, 3, BufferUtils.createIntBuffer(indexes));
 
-        //Quad quad = new Quad(1,1); //This replaces all of the above
         Geometry geo = new Geometry("CustomMesh", mesh);
 
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -122,15 +118,14 @@ public class Main extends SimpleApplication implements AnalogListener
 
         int colorIndex = 0;
         float[] colorArray = new float[mesh.getVertexCount() * 4];
-        System.out.println(mesh.getVertexCount());
         for (int i = 0; i < 4; i++)
         {
             // Red value (is increased by .2 on each next vertex here)
-            colorArray[colorIndex++] = 0.1f + (.2f * i);
-            // Green value (is reduced by .2 on each next vertex)
-            colorArray[colorIndex++] = 0.9f + (0.2f * i);
-            // Blue value (remains the same in our case)
             colorArray[colorIndex++] = 0.9f;
+            // Green value (is reduced by .2 on each next vertex)
+            colorArray[colorIndex++] = 0.1f;
+            // Blue value (remains the same in our case)
+            colorArray[colorIndex++] = 0.1f;
             // Alpha value (no transparency set here)
             colorArray[colorIndex++] = 1.0f;
         }
@@ -138,18 +133,15 @@ public class Main extends SimpleApplication implements AnalogListener
         mesh.setStatic();
         geo.setMaterial(mat);
         geo.updateModelBound();
-        bulletAppState.getPhysicsSpace().add(geo);
         rootNode.attachChild(geo);
     }
 
     private void setUpKeys()
     {
-
         inputManager.addMapping("MOUSE_MOVE", new MouseAxisTrigger(mouseInput.AXIS_X, true));
         inputManager.addMapping("MOUSE_MOVE", new MouseAxisTrigger(mouseInput.AXIS_Y, false));
 
         inputManager.addListener(this, "MOUSE_MOVE");
-
     }
 
     @Override
@@ -163,9 +155,20 @@ public class Main extends SimpleApplication implements AnalogListener
             if (results.size() > 0)
             {
                 CollisionResult closest = results.getClosestCollision();
-                Geometry geometry = closest.getGeometry();
+                Mesh mesh = closest.getGeometry().getMesh();
                 Vector3f contactPoint = closest.getContactPoint();
-                FloatBuffer vertices = (FloatBuffer) geometry.getMesh().getBuffer(Type.Position).getData();
+
+                //TODO Try TrianglePick (trimesh)
+                Vector3f v1 = new Vector3f();
+                Vector3f v2 = new Vector3f();
+                Vector3f v3 = new Vector3f();
+                final int TRIANGLECOUNT = mesh.getTriangleCount();
+                for (int i = 0; i < TRIANGLECOUNT; i++)
+                {
+                    mesh.getTriangle(i, v1, v2, v3);
+                }
+
+                FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
                 Vector3f vertice;
                 TreeMap verticeDistanceMap = new TreeMap();
                 for (int i = 0, n = 0; i < vertices.limit() - 3; i += 3, n++)
@@ -173,14 +176,15 @@ public class Main extends SimpleApplication implements AnalogListener
                     vertice = new Vector3f(vertices.get(i), vertices.get(i + 1), vertices.get(i + 2));
                     verticeDistanceMap.put(contactPoint.distance(vertice), i);
                 }
-                int[] verticeIndex =
-                {
-                    (int) verticeDistanceMap.pollLastEntry().getValue(),
-                    (int) verticeDistanceMap.pollLastEntry().getValue(),
-                    (int) verticeDistanceMap.pollLastEntry().getValue(),
-                    (int) verticeDistanceMap.pollLastEntry().getValue()
-                };
-                changeColorOfPolygon(geometry, verticeIndex);
+                int[] verticeIndex
+                        =
+                        {
+                            (int) verticeDistanceMap.pollLastEntry().getValue(),
+                            (int) verticeDistanceMap.pollLastEntry().getValue(),
+                            (int) verticeDistanceMap.pollLastEntry().getValue(),
+                            (int) verticeDistanceMap.pollLastEntry().getValue()
+                        };
+                changeColorOfPolygon(closest.getGeometry(), verticeIndex);
             }
         }
     }
