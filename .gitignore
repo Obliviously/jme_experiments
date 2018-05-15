@@ -5,3 +5,7 @@ libbulletjme.so
 liblwjgl64.so
 libopenal64.so
 master-application.jnlp
+
+OpenAL64.dll
+bulletjme.dll
+lwjgl64.dll
