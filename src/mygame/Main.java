@@ -152,20 +152,33 @@ public class Main extends SimpleApplication implements AnalogListener
             CollisionResults results = new CollisionResults();
             Ray ray = new Ray(cam.getLocation(), cam.getDirection());
             rootNode.collideWith(ray, results);
+
             if (results.size() > 0)
             {
                 CollisionResult closest = results.getClosestCollision();
                 Mesh mesh = closest.getGeometry().getMesh();
                 Vector3f contactPoint = closest.getContactPoint();
 
-                //TODO Try TrianglePick (trimesh)
+                Triangle triangleHit = new Triangle();
+                closest.getTriangle(triangleHit);
+
                 Vector3f v1 = new Vector3f();
                 Vector3f v2 = new Vector3f();
                 Vector3f v3 = new Vector3f();
+
                 final int TRIANGLECOUNT = mesh.getTriangleCount();
+                Triangle triangleMesh = new Triangle();
+
                 for (int i = 0; i < TRIANGLECOUNT; i++)
                 {
-                    mesh.getTriangle(i, v1, v2, v3);
+                    mesh.getTriangle(i, triangleMesh);
+                    if (triangleHit.get1().equals(triangleMesh.get1())
+                            && triangleHit.get2().equals(triangleMesh.get2())
+                            && triangleHit.get3().equals(triangleMesh.get3()))
+
+                    {
+                        System.out.println(triangleMesh.getCenter());
+                    }
                 }
 
                 FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
@@ -200,7 +213,6 @@ public class Main extends SimpleApplication implements AnalogListener
         int position;
         for (int i = 0; i < verticesPos.length; i++)
         {
-            System.out.println(verticesPos[i]);
             position = verticesPos[i];
             colorArray.put(position, 0.5f);
             colorArray.put(position + 1, 0.5f);
