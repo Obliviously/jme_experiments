@@ -17,6 +17,7 @@ import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.system.AppSettings;
 import com.jme3.util.BufferUtils;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.TreeMap;
 
 /**
@@ -162,13 +163,9 @@ public class Main extends SimpleApplication implements AnalogListener
                 Triangle triangleHit = new Triangle();
                 closest.getTriangle(triangleHit);
 
-                Vector3f v1 = new Vector3f();
-                Vector3f v2 = new Vector3f();
-                Vector3f v3 = new Vector3f();
-
                 final int TRIANGLECOUNT = mesh.getTriangleCount();
                 Triangle triangleMesh = new Triangle();
-
+                ArrayList<Vector3f> verticesHit = new ArrayList<Vector3f>();
                 for (int i = 0; i < TRIANGLECOUNT; i++)
                 {
                     mesh.getTriangle(i, triangleMesh);
@@ -177,9 +174,34 @@ public class Main extends SimpleApplication implements AnalogListener
                             && triangleHit.get3().equals(triangleMesh.get3()))
 
                     {
-                        System.out.println(triangleMesh.getCenter());
+                        verticesHit.add(triangleHit.get1());
+                        verticesHit.add(triangleHit.get2());
+                        verticesHit.add(triangleHit.get3());
                     }
                 }
+
+                Boolean added = false;
+                Vector3f v1_list = new Vector3f();
+                Vector3f v2_list = new Vector3f();
+                Vector3f v3_new = new Vector3f();
+                do
+                {
+                    added = false;
+                    for (int i = 0; i < verticesHit.size() - 1; i++)
+                    {
+                        v1_list = verticesHit.get(i);
+                        v2_list = verticesHit.get(i + 1);
+                        for (int j = 0; j < TRIANGLECOUNT; j++)
+                        {
+                            mesh.getTriangle(j, triangleMesh);
+                            if (triangleHit.get1().equals(v1_list))
+                            {
+                                //TODO Algorithm to find all adjacent triangels that have the same normal
+                            }
+                        }
+                    }
+                }
+                while (added);
 
                 FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
                 Vector3f vertice;
