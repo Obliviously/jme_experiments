@@ -157,22 +157,26 @@ public class Main extends SimpleApplication implements AnalogListener
             if (results.size() > 0)
             {
                 CollisionResult closest = results.getClosestCollision();
-                Mesh mesh = closest.getGeometry().getMesh();
+
+                Mesh meshHit = closest.getGeometry().getMesh();
+                final int TRIANGLECOUNT = meshHit.getTriangleCount();
+
                 Vector3f contactPoint = closest.getContactPoint();
 
-                Triangle triangleHit = new Triangle();
-                closest.getTriangle(triangleHit);
+                Triangle triangleHit = closest.getTriangle(null);
+                final Vector3f REF_NORMAL = triangleHit.getNormal();
 
-                final int TRIANGLECOUNT = mesh.getTriangleCount();
                 Triangle triangleMesh = new Triangle();
                 ArrayList<Vector3f> verticesHit = new ArrayList<Vector3f>();
+
+                //Find the hit triangle in the mesh
+                //TODO not sure if this is necessary
                 for (int i = 0; i < TRIANGLECOUNT; i++)
                 {
-                    mesh.getTriangle(i, triangleMesh);
+                    meshHit.getTriangle(i, triangleMesh);
                     if (triangleHit.get1().equals(triangleMesh.get1())
                             && triangleHit.get2().equals(triangleMesh.get2())
                             && triangleHit.get3().equals(triangleMesh.get3()))
-
                     {
                         verticesHit.add(triangleHit.get1());
                         verticesHit.add(triangleHit.get2());
@@ -180,30 +184,45 @@ public class Main extends SimpleApplication implements AnalogListener
                     }
                 }
 
-                Boolean added = false;
-                Vector3f v1_list = new Vector3f();
-                Vector3f v2_list = new Vector3f();
-                Vector3f v3_new = new Vector3f();
-                do
+                /*
+                 * This algorithm searches for every triangle that is adjacent
+                 * to the hit triangle and has the same normal value. This means
+                 * you get the biggest possible flat plane that contains the hit
+                 * triangle.
+                 */
+                Boolean added;
+                Vector3f v3_new;
+                do // as long as new vertices were added
                 {
                     added = false;
+                    /*
+                     * iterate over every continues vertice pair and find
+                     * triangles in the list that have exactly these two
+                     * vertices in common and have the same normal value.
+                     */
                     for (int i = 0; i < verticesHit.size() - 1; i++)
                     {
-                        v1_list = verticesHit.get(i);
-                        v2_list = verticesHit.get(i + 1);
-                        for (int j = 0; j < TRIANGLECOUNT; j++)
+                        v3_new = missingVertexNormalAdjacentTriangle(verticesHit.get(i), verticesHit.get(i + 1), TRIANGLECOUNT, meshHit, REF_NORMAL, verticesHit);
+                        if (v3_new != null)
                         {
-                            mesh.getTriangle(j, triangleMesh);
-                            if (triangleHit.get1().equals(v1_list))
-                            {
-                                //TODO Algorithm to find all adjacent triangels that have the same normal
-                            }
+                            verticesHit.add(i + 1, v3_new);
+                            added = true;
                         }
+
+                    }
+                    //Also compare the last and first vertex in the list
+                    v3_new = missingVertexNormalAdjacentTriangle(verticesHit.get(0), verticesHit.get(verticesHit.size() - 1), TRIANGLECOUNT, meshHit, REF_NORMAL, verticesHit);
+                    if (v3_new != null)
+                    {
+                        verticesHit.add(v3_new);
+                        added = true;
                     }
                 }
                 while (added);
 
-                FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
+                System.out.println(verticesHit.size());
+
+                FloatBuffer vertices = (FloatBuffer) meshHit.getBuffer(Type.Position).getData();
                 Vector3f vertice;
                 TreeMap verticeDistanceMap = new TreeMap();
                 for (int i = 0, n = 0; i < vertices.limit() - 3; i += 3, n++)
@@ -222,6 +241,90 @@ public class Main extends SimpleApplication implements AnalogListener
                 changeColorOfPolygon(closest.getGeometry(), verticeIndex);
             }
         }
+    }
+
+    /**
+     * Takes the two given vertices and searches for them in the given mesh. If
+     * a triangle is found that contains both vertices, one new one and has the
+     * same normal value the new vertice will be returned. If no triangle
+     * matching the conditions can be found null is returned.
+     *
+     * @param v1
+     * @param v2
+     * @param triangleCount
+     * @param meshHit
+     * @param referenceNormal
+     *
+     * @return
+     */
+    private Vector3f missingVertexNormalAdjacentTriangle(Vector3f v1, Vector3f v2, int triangleCount, Mesh meshHit, Vector3f referenceNormal, ArrayList<Vector3f> verticesHit)
+    {
+        Triangle triangleMesh = new Triangle();
+        for (int j = 0; j < triangleCount; j++)
+        {
+            Vector3f v3_new;
+            // 1. get new triangle
+            meshHit.getTriangle(j, triangleMesh);
+            // 2. check if it is adjacent to the current vertices
+            if ((v3_new = triangleMatchingTwo(triangleMesh, v1, v2)) != null)
+            {
+                // 3. check if its normal (direction) is equal
+                if (triangleMesh.getNormal().distance(referenceNormal) == 0.0f)
+                {
+                    if (!verticesHit.contains(v3_new))
+                    {
+                        return v3_new;
+                    }
+
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Compares the given triangle with the two vertices. If both vertices are
+     * part of the triangle it returns the third one. Else NULL is returned.
+     *
+     * @param triangle
+     * @param v1
+     * @param v2
+     *
+     * @return
+     */
+    public Vector3f triangleMatchingTwo(Triangle triangle, Vector3f v1, Vector3f v2)
+    {
+        // t3
+        if (triangle.get1().equals(v1) && triangle.get2().equals(v2))
+        {
+            return triangle.get3();
+        }
+        // t3
+        if (triangle.get1().equals(v2) && triangle.get2().equals(v1))
+        {
+            return triangle.get3();
+        }
+        // t2
+        if (triangle.get1().equals(v1) && triangle.get3().equals(v2))
+        {
+            return triangle.get2();
+        }
+        // t2
+        if (triangle.get1().equals(v2) && triangle.get3().equals(v1))
+        {
+            return triangle.get2();
+        }
+        // t1
+        if (triangle.get2().equals(v1) && triangle.get3().equals(v2))
+        {
+            return triangle.get1();
+        }
+        // t1
+        if (triangle.get2().equals(v2) && triangle.get3().equals(v1))
+        {
+            return triangle.get1();
+        }
+        return null;
     }
 
     private void changeColorOfPolygon(Geometry geometry, int[] verticesPos)
