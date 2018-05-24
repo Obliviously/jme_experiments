@@ -13,13 +13,13 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.system.AppSettings;
 import com.jme3.util.BufferUtils;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.TreeMap;
 
 /**
  * This is the Main Class of your Game. You should only do initialization here.
@@ -136,6 +136,15 @@ public class Main extends SimpleApplication implements AnalogListener
         geo.setMaterial(mat);
         geo.updateModelBound();
         rootNode.attachChild(geo);
+        Geometry boxGeo = new Geometry();
+        Node box = (Node) assetManager.loadModel("Models/box.j3o");
+        System.out.println(((Geometry) ((((Node) box.getChild(0)).getChild(0)))));
+
+        if (box.getChild(0) instanceof Geometry)
+        {
+            boxGeo = (Geometry) box.getChild(0);
+        }
+        this.changeColorOfVertices(boxGeo, null);
     }
 
     private void setUpKeys()
@@ -301,13 +310,16 @@ public class Main extends SimpleApplication implements AnalogListener
     private void changeColorOfVertices(Geometry geometry, ArrayList<Vector3f> changeVertices)
     {
         Mesh mesh = geometry.getMesh();
-        FloatBuffer colorArray = (FloatBuffer) mesh.getBuffer(Type.Color).getData();
-        FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
+        FloatBuffer colorArray = BufferUtils.createFloatBuffer(new float[4 * mesh.getVertexCount()]);
+        FloatBuffer vertices = BufferUtils.createFloatBuffer(new float[3 * mesh.getVertexCount()]);
+        //FloatBuffer colorArray = (FloatBuffer) mesh.getBuffer(Type.Color).getData();
+        //FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
+
         float color = new Random().nextFloat();
         int j;
         for (int i = 0; i < mesh.getVertexCount(); i++)
         {
-            if (changeVertices.contains(new Vector3f(vertices.get(i * 3), vertices.get(i * 3 + 1), vertices.get(i * 3 + 2))))
+            if (changeVertices == null || changeVertices.contains(new Vector3f(vertices.get(i * 3), vertices.get(i * 3 + 1), vertices.get(i * 3 + 2))))
             {
                 j = i * 4; // RGBA Value for every Vertex
 
