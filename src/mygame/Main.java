@@ -18,6 +18,7 @@ import com.jme3.system.AppSettings;
 import com.jme3.util.BufferUtils;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.TreeMap;
 
 /**
@@ -55,20 +56,20 @@ public class Main extends SimpleApplication implements AnalogListener
         vertices[3] = new Vector3f(3, 3, 0);
 
         //Left
-        vertices[4] = new Vector3f(-3, 0, 0);
-        vertices[5] = new Vector3f(-3, 3, 0);
+        vertices[4] = new Vector3f(-3, 0, 1);
+        vertices[5] = new Vector3f(-3, 3, 1);
 
         //Top
-        vertices[6] = new Vector3f(0, 6, 0);
-        vertices[7] = new Vector3f(3, 6, 0);
+        vertices[6] = new Vector3f(0, 6, 1);
+        vertices[7] = new Vector3f(3, 6, 1);
 
         //Right
-        vertices[8] = new Vector3f(6, 3, 0);
-        vertices[9] = new Vector3f(6, 0, 0);
+        vertices[8] = new Vector3f(6, 3, -1);
+        vertices[9] = new Vector3f(6, 0, -1);
 
         //Bottom
-        vertices[10] = new Vector3f(0, -3, 0);
-        vertices[11] = new Vector3f(3, -3, 0);
+        vertices[10] = new Vector3f(0, -3, 1);
+        vertices[11] = new Vector3f(3, -3, 1);
 
         Vector2f[] texCoord = new Vector2f[12];
         //Center
@@ -166,23 +167,12 @@ public class Main extends SimpleApplication implements AnalogListener
                 Triangle triangleHit = closest.getTriangle(null);
                 final Vector3f REF_NORMAL = triangleHit.getNormal();
 
-                Triangle triangleMesh = new Triangle();
-                ArrayList<Vector3f> verticesHit = new ArrayList<Vector3f>();
-
-                //Find the hit triangle in the mesh
-                //TODO not sure if this is necessary
-                for (int i = 0; i < TRIANGLECOUNT; i++)
-                {
-                    meshHit.getTriangle(i, triangleMesh);
-                    if (triangleHit.get1().equals(triangleMesh.get1())
-                            && triangleHit.get2().equals(triangleMesh.get2())
-                            && triangleHit.get3().equals(triangleMesh.get3()))
-                    {
-                        verticesHit.add(triangleHit.get1());
-                        verticesHit.add(triangleHit.get2());
-                        verticesHit.add(triangleHit.get3());
-                    }
-                }
+                ArrayList<Vector3f> verticesHit = new ArrayList<>();
+                ArrayList<Integer> verticesHitIndex = new ArrayList<>();
+                //Add initial vertices to start search from
+                verticesHit.add(triangleHit.get1());
+                verticesHit.add(triangleHit.get2());
+                verticesHit.add(triangleHit.get3());
 
                 /*
                  * This algorithm searches for every triangle that is adjacent
@@ -219,34 +209,15 @@ public class Main extends SimpleApplication implements AnalogListener
                     }
                 }
                 while (added);
-
-                System.out.println(verticesHit.size());
-
-                FloatBuffer vertices = (FloatBuffer) meshHit.getBuffer(Type.Position).getData();
-                Vector3f vertice;
-                TreeMap verticeDistanceMap = new TreeMap();
-                for (int i = 0, n = 0; i < vertices.limit() - 3; i += 3, n++)
-                {
-                    vertice = new Vector3f(vertices.get(i), vertices.get(i + 1), vertices.get(i + 2));
-                    verticeDistanceMap.put(contactPoint.distance(vertice), i);
-                }
-                int[] verticeIndex
-                        =
-                        {
-                            (int) verticeDistanceMap.pollLastEntry().getValue(),
-                            (int) verticeDistanceMap.pollLastEntry().getValue(),
-                            (int) verticeDistanceMap.pollLastEntry().getValue(),
-                            (int) verticeDistanceMap.pollLastEntry().getValue()
-                        };
-                changeColorOfPolygon(closest.getGeometry(), verticeIndex);
+                changeColorOfVertices(closest.getGeometry(), verticesHit);
             }
         }
     }
 
     /**
      * Takes the two given vertices and searches for them in the given mesh. If
-     * a triangle is found that contains both vertices, one new one and has the
-     * same normal value the new vertice will be returned. If no triangle
+     * a triangle is found that contains both vertices and one new one and has
+     * the same normal value the new vertice will be returned. If no vertice
      * matching the conditions can be found null is returned.
      *
      * @param v1
@@ -327,26 +298,29 @@ public class Main extends SimpleApplication implements AnalogListener
         return null;
     }
 
-    private void changeColorOfPolygon(Geometry geometry, int[] verticesPos)
+    private void changeColorOfVertices(Geometry geometry, ArrayList<Vector3f> changeVertices)
     {
-        if (verticesPos.length != 4)
+        Mesh mesh = geometry.getMesh();
+        FloatBuffer colorArray = (FloatBuffer) mesh.getBuffer(Type.Color).getData();
+        FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
+        float color = new Random().nextFloat();
+        int j;
+        for (int i = 0; i < mesh.getVertexCount(); i++)
         {
-            System.err.println("Need exactly 4 vertices to change color");
-        }
-        FloatBuffer colorArray = (FloatBuffer) geometry.getMesh().getBuffer(Type.Color).getData();
+            if (changeVertices.contains(new Vector3f(vertices.get(i * 3), vertices.get(i * 3 + 1), vertices.get(i * 3 + 2))))
+            {
+                j = i * 4; // RGBA Value for every Vertex
 
-        int position;
-        for (int i = 0; i < verticesPos.length; i++)
-        {
-            position = verticesPos[i];
-            colorArray.put(position, 0.5f);
-            colorArray.put(position + 1, 0.5f);
-            colorArray.put(position + 2, 0.5f);
-            colorArray.put(position + 3, 1.0f);
+                colorArray.put(j, color);
+                colorArray.put(j + 1, color);
+                colorArray.put(j + 2, color);
+                colorArray.put(j + 3, 1.0f);
+                System.err.println(i);
+            }
         }
-        geometry.getMesh().setBuffer(Type.Color, 4, colorArray);
+        mesh.setBuffer(Type.Color, 4, colorArray);
+
         geometry.updateModelBound();
-
     }
 
     @Override
