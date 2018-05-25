@@ -17,6 +17,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.system.AppSettings;
 import com.jme3.util.BufferUtils;
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Random;
@@ -138,12 +139,7 @@ public class Main extends SimpleApplication implements AnalogListener
         rootNode.attachChild(geo);
         Geometry boxGeo = new Geometry();
         Node box = (Node) assetManager.loadModel("Models/box.j3o");
-        System.out.println(((Geometry) ((((Node) box.getChild(0)).getChild(0)))));
-
-        if (box.getChild(0) instanceof Geometry)
-        {
-            boxGeo = (Geometry) box.getChild(0);
-        }
+        boxGeo = (Geometry) (((Node) ((Node) box.getChild(0)).getChild(0)).getChild(0));
         this.changeColorOfVertices(boxGeo, null);
     }
 
@@ -310,10 +306,11 @@ public class Main extends SimpleApplication implements AnalogListener
     private void changeColorOfVertices(Geometry geometry, ArrayList<Vector3f> changeVertices)
     {
         Mesh mesh = geometry.getMesh();
-        FloatBuffer colorArray = BufferUtils.createFloatBuffer(new float[4 * mesh.getVertexCount()]);
-        FloatBuffer vertices = BufferUtils.createFloatBuffer(new float[3 * mesh.getVertexCount()]);
-        //FloatBuffer colorArray = (FloatBuffer) mesh.getBuffer(Type.Color).getData();
-        //FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
+        //FloatBuffer colorArray = BufferUtils.createFloatBuffer(new float[4 * mesh.getVertexCount()]);
+        //FloatBuffer vertices = BufferUtils.createFloatBuffer(new float[3 * mesh.getVertexCount()]);
+        FloatBuffer colorArray = (FloatBuffer) mesh.getBuffer(Type.Color).getData();
+        FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
+
 
         float color = new Random().nextFloat();
         int j;
@@ -331,7 +328,6 @@ public class Main extends SimpleApplication implements AnalogListener
             }
         }
         mesh.setBuffer(Type.Color, 4, colorArray);
-
         geometry.updateModelBound();
     }
 
