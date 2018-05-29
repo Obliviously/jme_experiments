@@ -17,6 +17,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.system.AppSettings;
 import com.jme3.util.BufferUtils;
+import java.awt.Color;
 import java.nio.FloatBuffer;
 import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
@@ -248,7 +249,7 @@ public class Main extends SimpleApplication implements AnalogListener
             if ((v3_new = triangleMatchingTwo(triangleMesh, v1, v2)) != null)
             {
                 // 3. check if its normal (direction) is equal
-                if (triangleMesh.getNormal().distance(referenceNormal) == 0.0f)
+                if (triangleMesh.getNormal().distance(referenceNormal) <= 0.001f)
                 {
                     if (!verticesHit.contains(v3_new))
                     {
@@ -310,21 +311,28 @@ public class Main extends SimpleApplication implements AnalogListener
     {
         Mesh mesh = geometry.getMesh();
         mesh.clearBuffer(Type.Color);
+
         FloatBuffer colorArray = BufferUtils.createFloatBuffer(new float[4 * mesh.getVertexCount()]);
         FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
         System.out.println(colorArray.limit() + "|" + mesh.getVertexCount() + "|" + changeVertices.size());
-        float color = new Random().nextFloat();
+        float color = 0.8f;
+        float offColor = 0.2f;
         int j;
         for (int i = 0; i < mesh.getVertexCount(); i++)
         {
+            j = i * 4; // RGBA Value for every Vertex
             if (changeVertices == null || changeVertices.contains(new Vector3f(vertices.get(i * 3), vertices.get(i * 3 + 1), vertices.get(i * 3 + 2))))
             {
-                j = i * 4; // RGBA Value for every Vertex
-                //System.out.println(i);
-
                 colorArray.put(j, color);
                 colorArray.put(j + 1, color);
                 colorArray.put(j + 2, color);
+                colorArray.put(j + 3, 1.0f);
+            }
+            else
+            {
+                colorArray.put(j, offColor);
+                colorArray.put(j + 1, offColor);
+                colorArray.put(j + 2, offColor);
                 colorArray.put(j + 3, 1.0f);
             }
         }
