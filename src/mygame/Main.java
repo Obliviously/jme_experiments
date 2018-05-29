@@ -17,8 +17,8 @@ import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.system.AppSettings;
 import com.jme3.util.BufferUtils;
-import java.nio.Buffer;
 import java.nio.FloatBuffer;
+import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -39,6 +39,7 @@ public class Main extends SimpleApplication implements AnalogListener
         app.showSettings = false;
         app.setSettings(appSetting);
         app.start();
+
     }
 
     @Override
@@ -137,17 +138,19 @@ public class Main extends SimpleApplication implements AnalogListener
         geo.setMaterial(mat);
         geo.updateModelBound();
         rootNode.attachChild(geo);
-        Geometry boxGeo = new Geometry();
+
+        Geometry boxGeo;
         Node box = (Node) assetManager.loadModel("Models/box.j3o");
         boxGeo = (Geometry) (((Node) ((Node) box.getChild(0)).getChild(0)).getChild(0));
-        this.changeColorOfVertices(boxGeo, null);
+        boxGeo.setMaterial(mat);
+        rootNode.attachChild(box);
+        //this.changeColorOfVertices(boxGeo, null);
     }
 
     private void setUpKeys()
     {
         inputManager.addMapping("MOUSE_MOVE", new MouseAxisTrigger(mouseInput.AXIS_X, true));
         inputManager.addMapping("MOUSE_MOVE", new MouseAxisTrigger(mouseInput.AXIS_Y, false));
-
         inputManager.addListener(this, "MOUSE_MOVE");
     }
 
@@ -306,12 +309,10 @@ public class Main extends SimpleApplication implements AnalogListener
     private void changeColorOfVertices(Geometry geometry, ArrayList<Vector3f> changeVertices)
     {
         Mesh mesh = geometry.getMesh();
-        //FloatBuffer colorArray = BufferUtils.createFloatBuffer(new float[4 * mesh.getVertexCount()]);
-        //FloatBuffer vertices = BufferUtils.createFloatBuffer(new float[3 * mesh.getVertexCount()]);
-        FloatBuffer colorArray = (FloatBuffer) mesh.getBuffer(Type.Color).getData();
+        mesh.clearBuffer(Type.Color);
+        FloatBuffer colorArray = BufferUtils.createFloatBuffer(new float[4 * mesh.getVertexCount()]);
         FloatBuffer vertices = (FloatBuffer) mesh.getBuffer(Type.Position).getData();
-
-
+        System.out.println(colorArray.limit() + "|" + mesh.getVertexCount() + "|" + changeVertices.size());
         float color = new Random().nextFloat();
         int j;
         for (int i = 0; i < mesh.getVertexCount(); i++)
@@ -319,12 +320,12 @@ public class Main extends SimpleApplication implements AnalogListener
             if (changeVertices == null || changeVertices.contains(new Vector3f(vertices.get(i * 3), vertices.get(i * 3 + 1), vertices.get(i * 3 + 2))))
             {
                 j = i * 4; // RGBA Value for every Vertex
+                //System.out.println(i);
 
                 colorArray.put(j, color);
                 colorArray.put(j + 1, color);
                 colorArray.put(j + 2, color);
                 colorArray.put(j + 3, 1.0f);
-                System.err.println(i);
             }
         }
         mesh.setBuffer(Type.Color, 4, colorArray);
