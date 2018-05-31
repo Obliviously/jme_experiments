@@ -24,16 +24,22 @@ import utils.MeshUtils;
  */
 public class EditAppState extends BaseAppState
 {
+
+    private enum EditState
+    {
+        UNSELECTED, SELECTED
+    };
     private EditModeExample app;
     private InputController input;
+    private EditState editState;
 
     @Override
     protected void initialize(Application app)
     {
         this.app = (EditModeExample) app;
+        this.editState = EditState.UNSELECTED;
         this.input = new InputController();
         input.setUpInput();
-        System.out.println("Init");
     }
 
     @Override
@@ -74,6 +80,15 @@ public class EditAppState extends BaseAppState
         @Override
         public void onAnalog(String name, float value, float tpf)
         {
+            switch (editState)
+            {
+            case UNSELECTED:
+                break;
+            case SELECTED:
+                break;
+            default:
+                break;
+            }
             if (name.equals("MOUSE_MOVE"))
             {
                 CollisionResults results = new CollisionResults();
