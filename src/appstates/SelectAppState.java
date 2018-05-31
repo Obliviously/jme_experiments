@@ -86,8 +86,7 @@ public class SelectAppState extends BaseAppState
 
                 if (results.size() > 0)
                 {
-                    //TODO
-                    System.out.println("SELECT");
+                    //TODO              
                 }
             }
         }

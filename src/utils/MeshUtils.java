@@ -56,12 +56,10 @@ public class MeshUtils
         return null;
     }
 
-    public static void selectFlatArea(CollisionResult closest)
+    public static ArrayList<Vector3f> calcFlatArea(CollisionResult closest)
     {
         Mesh meshHit = closest.getGeometry().getMesh();
         final int TRIANGLECOUNT = meshHit.getTriangleCount();
-
-        Vector3f contactPoint = closest.getContactPoint();
 
         Triangle triangleHit = closest.getTriangle(null);
         final Vector3f REF_NORMAL = triangleHit.getNormal();
@@ -107,6 +105,6 @@ public class MeshUtils
             }
         }
         while (added);
-        VertexUtils.changeColorOfVertices(closest.getGeometry(), verticesHit);
+        return verticesHit;
     }
 }

@@ -69,7 +69,7 @@ public class MeshHighlightingExample extends SimpleApplication implements Analog
 
             if (results.size() > 0)
             {
-                MeshUtils.selectFlatArea(results.getClosestCollision());
+                MeshUtils.calcFlatArea(results.getClosestCollision());
             }
         }
     }
