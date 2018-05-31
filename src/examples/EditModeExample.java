@@ -1,12 +1,16 @@
 package examples;
 
+import appstates.EditAppState;
+import appstates.SelectAppState;
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.state.BaseAppState;
 import com.jme3.collision.CollisionResults;
+import com.jme3.input.KeyInput;
+import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
-import com.jme3.light.AmbientLight;
 import com.jme3.material.Material;
-import com.jme3.math.ColorRGBA;
 import com.jme3.math.Ray;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
@@ -21,12 +25,14 @@ import utils.VertexUtils;
  *
  * @author Fabian Rauscher
  */
-public class Main extends SimpleApplication implements AnalogListener
+public class EditModeExample extends SimpleApplication
 {
+    private BaseAppState editAppState = new EditAppState();
+    private BaseAppState selectAppState = new SelectAppState();
 
     public static void main(String[] args)
     {
-        Main app = new Main();
+        EditModeExample app = new EditModeExample();
         AppSettings appSetting = new AppSettings(true);
         appSetting.setFrameRate(60);
         app.showSettings = false;
@@ -38,52 +44,32 @@ public class Main extends SimpleApplication implements AnalogListener
     @Override
     public void simpleInitApp()
     {
-        setUpKeys();
-
+        //load world
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setBoolean("VertexColor", true);
-
         Geometry boxGeo;
-        Node box = (Node) assetManager.loadModel("Models/box.j3o");
+        Node box = (Node) assetManager.loadModel("Models/box.blend");
         boxGeo = (Geometry) (((Node) ((Node) box.getChild(0)).getChild(0)).getChild(0));
         boxGeo.scale(1);
         boxGeo.setMaterial(mat);
         rootNode.attachChild(box);
         VertexUtils.changeColorOfVertices(boxGeo, null);
-    }
 
-    private void setUpKeys()
-    {
-        inputManager.addMapping("MOUSE_MOVE", new MouseAxisTrigger(mouseInput.AXIS_X, true));
-        inputManager.addMapping("MOUSE_MOVE", new MouseAxisTrigger(mouseInput.AXIS_Y, false));
-        inputManager.addListener(this, "MOUSE_MOVE");
-    }
+        //initial state
+        this.getStateManager().attach(selectAppState);
 
-    @Override
-    public void onAnalog(String name, float value, float tpf)
-    {
-        if (name.equals("MOUSE_MOVE"))
-        {
-            CollisionResults results = new CollisionResults();
-            Ray ray = new Ray(cam.getLocation(), cam.getDirection());
-            rootNode.collideWith(ray, results);
-
-            if (results.size() > 0)
-            {
-                MeshUtils.selectFlatArea(results.getClosestCollision());
-            }
-        }
     }
 
     @Override
     public void simpleUpdate(float tpf)
     {
-        //TODO: add update code
+        //add update code
     }
 
     @Override
     public void simpleRender(RenderManager rm)
     {
-        //TODO: add render code
+        //add render code
     }
+
 }

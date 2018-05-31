@@ -43,7 +43,7 @@ public class MeshUtils
             if ((v3_new = TriangleUtils.twoMatchingVertices(triangleMesh, v1, v2)) != null)
             {
                 // 3. check if its normal (direction) is equal
-                if (triangleMesh.getNormal().distance(referenceNormal) <= 0.001f)
+                if (triangleMesh.getNormal().distance(referenceNormal) <= 0.0001f)
                 {
                     if (!verticesHit.contains(v3_new))
                     {
