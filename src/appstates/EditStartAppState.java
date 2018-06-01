@@ -8,6 +8,7 @@ package appstates;
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.asset.AssetManager;
+import com.jme3.bullet.BulletAppState;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.KeyInput;
@@ -26,6 +27,8 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Sphere;
 import examples.EditModeExample;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import utils.AbstractInputController;
 import utils.MeshUtils;
 import utils.VertexUtils;
@@ -40,6 +43,7 @@ public class EditStartAppState extends BaseAppState
     private InputController input;
     private Node rootNode;
     private AssetManager assetManager;
+    private final Logger logger = Logger.getLogger(EditStartAppState.class.getName());
 
     private Vector3f lastContactPoint;
     private ArrayList<Vector3f> currSelectedVertices;
@@ -124,29 +128,41 @@ public class EditStartAppState extends BaseAppState
                     CollisionResult closest = results.getClosestCollision();
                     Vector3f newContactPoint = closest.getContactPoint();
                     ArrayList<Vector3f> newSelectedVertices = MeshUtils.calcFlatArea(closest);
-                    if (newSelectedVertices.equals(currSelectedVertices))
+                    if (newSelectedVertices.containsAll(currSelectedVertices))
                     {
                         addMark(newContactPoint);
                     }
                     else
                     {
+                        //Make a real copy because 'retainAll' mutates the list.
+                        ArrayList<Vector3f> tempVertices = new ArrayList<>(newSelectedVertices);
                         //calculate intersection of the two vertice lists.
                         newSelectedVertices.retainAll(currSelectedVertices);
-                        System.out.println(newSelectedVertices.size());
+
                         switch (newSelectedVertices.size())
                         {
                             case 0:
-                                System.out.println("cant do that");
+                                logger.log(Level.INFO, "Selection is invalid!");
                                 break;
                             case 1:
+                                currSelectedVertices = tempVertices;
+                                VertexUtils.changeColorOfVertices(closest.getGeometry(), currSelectedVertices);
+
                                 addMark(newSelectedVertices.get(0));
+                                addMark(newContactPoint);
                                 break;
                             case 2:
-                                addMark(newSelectedVertices.get(0));
-                                addMark(newSelectedVertices.get(1));
+                                currSelectedVertices = tempVertices;
+                                VertexUtils.changeColorOfVertices(closest.getGeometry(), currSelectedVertices);
+
+                                lastContactPoint = marks.get(marks.size() - 1).getLocalTranslation();
+                                Vector3f closestContactPoint = calcClosestPointOnLine(newSelectedVertices.get(0), newSelectedVertices.get(1), lastContactPoint);
+                                addMark(closestContactPoint);
+                                addMark(newContactPoint);
+
                                 break;
                             default:
-                                System.out.println("this shouldnt happen");
+                                logger.log(Level.WARNING, "This should not happen!");
                                 break;
                         }
 
@@ -154,6 +170,27 @@ public class EditStartAppState extends BaseAppState
 
                 }
             }
+        }
+
+        private Vector3f calcClosestPointOnLine(Vector3f lineStart, Vector3f lineEnd, Vector3f point)
+        {
+            Vector3f closestPoint = lineStart;
+            Vector3f line = lineStart.subtract(lineEnd);
+            float linePosition = 0.1f;
+            double lastDistance = Double.MAX_VALUE;
+            double currDistance = lineStart.distance(point);
+
+            if (lineStart.distance(lineEnd) < lineStart.add(line.mult(linePosition)).distance(lineEnd))
+            {
+                lineStart = lineEnd;
+            }
+            for (int i = 1; currDistance < lastDistance; i++)
+            {
+                lastDistance = currDistance;
+                closestPoint = lineStart.add(line.mult(linePosition * i));
+                currDistance = point.distance(closestPoint);
+            }
+            return closestPoint.subtract(line.mult(linePosition));
         }
 
         @Override

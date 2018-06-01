@@ -19,9 +19,6 @@ import utils.VertexUtils;
  */
 public class EditModeExample extends SimpleApplication
 {
-    private BaseAppState editAppState = new EditAppState();
-    private BaseAppState selectAppState = new SelectAppState();
-
     public static void main(String[] args)
     {
         EditModeExample app = new EditModeExample();
@@ -30,7 +27,6 @@ public class EditModeExample extends SimpleApplication
         app.showSettings = false;
         app.setSettings(appSetting);
         app.start();
-
     }
 
     @Override
@@ -42,14 +38,12 @@ public class EditModeExample extends SimpleApplication
         Geometry boxGeo;
         Node box = (Node) assetManager.loadModel("Models/box.blend");
         boxGeo = (Geometry) (((Node) ((Node) box.getChild(0)).getChild(0)).getChild(0));
-        boxGeo.scale(1);
         boxGeo.setMaterial(mat);
         rootNode.attachChild(box);
         VertexUtils.changeColorOfVertices(boxGeo, null);
 
         //initial state
-        this.getStateManager().attach(selectAppState);
-
+        this.getStateManager().attach(new SelectAppState());
     }
 
     @Override
@@ -63,5 +57,4 @@ public class EditModeExample extends SimpleApplication
     {
         //add render code
     }
-
 }
