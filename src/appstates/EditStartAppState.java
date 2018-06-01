@@ -8,7 +8,6 @@ package appstates;
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.asset.AssetManager;
-import com.jme3.bullet.BulletAppState;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.KeyInput;
@@ -23,7 +22,9 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
+import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import examples.EditModeExample;
 import java.util.ArrayList;
@@ -131,6 +132,8 @@ public class EditStartAppState extends BaseAppState
                     if (newSelectedVertices.containsAll(currSelectedVertices))
                     {
                         addMark(newContactPoint);
+                        addLineBetween(marks.get(marks.size() - 2), marks.get(marks.size() - 1));
+
                     }
                     else
                     {
@@ -145,13 +148,18 @@ public class EditStartAppState extends BaseAppState
                                 logger.log(Level.INFO, "Selection is invalid!");
                                 break;
                             case 1:
+                                System.out.println("1");
                                 currSelectedVertices = tempVertices;
                                 VertexUtils.changeColorOfVertices(closest.getGeometry(), currSelectedVertices);
 
                                 addMark(newSelectedVertices.get(0));
                                 addMark(newContactPoint);
+
+                                addLineBetween(marks.get(marks.size() - 3), marks.get(marks.size() - 2));
+                                addLineBetween(marks.get(marks.size() - 2), marks.get(marks.size() - 1));
                                 break;
                             case 2:
+                                System.out.println("2");
                                 currSelectedVertices = tempVertices;
                                 VertexUtils.changeColorOfVertices(closest.getGeometry(), currSelectedVertices);
 
@@ -159,6 +167,9 @@ public class EditStartAppState extends BaseAppState
                                 Vector3f closestContactPoint = calcClosestPointOnLine(newSelectedVertices.get(0), newSelectedVertices.get(1), lastContactPoint);
                                 addMark(closestContactPoint);
                                 addMark(newContactPoint);
+
+                                addLineBetween(marks.get(marks.size() - 3), marks.get(marks.size() - 2));
+                                addLineBetween(marks.get(marks.size() - 2), marks.get(marks.size() - 1));
 
                                 break;
                             default:
@@ -172,18 +183,40 @@ public class EditStartAppState extends BaseAppState
             }
         }
 
+        private void addLineBetween(Geometry one, Geometry two)
+        {
+            Vector3f min = new Vector3f(one.getLocalTranslation());
+
+            Vector3f max = new Vector3f(two.getLocalTranslation());
+
+            min.minLocal(two.getLocalTranslation());
+
+            max.maxLocal(one.getLocalTranslation());
+
+            Mesh box = new Box(min, max);
+            Geometry boxGeom = new Geometry("Box", box);
+            Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+            mat.setColor("Color", ColorRGBA.Red);
+            boxGeom.setMaterial(mat);
+
+            //boxGeom.setLocalTranslation(one.getLocalTranslation());
+            rootNode.attachChild(boxGeom);
+        }
+
         private Vector3f calcClosestPointOnLine(Vector3f lineStart, Vector3f lineEnd, Vector3f point)
         {
             Vector3f closestPoint = lineStart;
             Vector3f line = lineStart.subtract(lineEnd);
             float linePosition = 0.1f;
-            double lastDistance = Double.MAX_VALUE;
-            double currDistance = lineStart.distance(point);
 
             if (lineStart.distance(lineEnd) < lineStart.add(line.mult(linePosition)).distance(lineEnd))
             {
                 lineStart = lineEnd;
             }
+
+            double lastDistance = Double.MAX_VALUE;
+            double currDistance = lineStart.distance(point);
+
             for (int i = 1; currDistance < lastDistance; i++)
             {
                 lastDistance = currDistance;
