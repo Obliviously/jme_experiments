@@ -19,6 +19,7 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -132,7 +133,7 @@ public class EditStartAppState extends BaseAppState
                     if (newSelectedVertices.containsAll(currSelectedVertices))
                     {
                         addMark(newContactPoint);
-                        addLineBetween(marks.get(marks.size() - 2), marks.get(marks.size() - 1));
+                        addLineBetween(marks.get(marks.size() - 2).getLocalTranslation(), marks.get(marks.size() - 1).getLocalTranslation());
 
                     }
                     else
@@ -155,8 +156,8 @@ public class EditStartAppState extends BaseAppState
                                 addMark(newSelectedVertices.get(0));
                                 addMark(newContactPoint);
 
-                                addLineBetween(marks.get(marks.size() - 3), marks.get(marks.size() - 2));
-                                addLineBetween(marks.get(marks.size() - 2), marks.get(marks.size() - 1));
+                                addLineBetween(marks.get(marks.size() - 3).getLocalTranslation(), marks.get(marks.size() - 2).getLocalTranslation());
+                                addLineBetween(marks.get(marks.size() - 2).getLocalTranslation(), marks.get(marks.size() - 1).getLocalTranslation());
                                 break;
                             case 2:
                                 System.out.println("2");
@@ -168,8 +169,8 @@ public class EditStartAppState extends BaseAppState
                                 addMark(closestContactPoint);
                                 addMark(newContactPoint);
 
-                                addLineBetween(marks.get(marks.size() - 3), marks.get(marks.size() - 2));
-                                addLineBetween(marks.get(marks.size() - 2), marks.get(marks.size() - 1));
+                                addLineBetween(marks.get(marks.size() - 3).getLocalTranslation(), marks.get(marks.size() - 2).getLocalTranslation());
+                                addLineBetween(marks.get(marks.size() - 2).getLocalTranslation(), marks.get(marks.size() - 1).getLocalTranslation());
 
                                 break;
                             default:
@@ -183,24 +184,26 @@ public class EditStartAppState extends BaseAppState
             }
         }
 
-        private void addLineBetween(Geometry one, Geometry two)
+        private void addLineBetween(Vector3f one, Vector3f two)
         {
-            Vector3f min = new Vector3f(one.getLocalTranslation());
+            float distance = one.distance(two);
 
-            Vector3f max = new Vector3f(two.getLocalTranslation());
-
-            min.minLocal(two.getLocalTranslation());
-
-            max.maxLocal(one.getLocalTranslation());
-
-            Mesh box = new Box(min, max);
+            Mesh box = new Box(distance, 0.01f, 0.01f);
             Geometry boxGeom = new Geometry("Box", box);
             Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
             mat.setColor("Color", ColorRGBA.Red);
             boxGeom.setMaterial(mat);
-
-            //boxGeom.setLocalTranslation(one.getLocalTranslation());
+            boxGeom.setLocalRotation(calcRotation(one.normalize(), two.normalize()));
+            boxGeom.setLocalTranslation(one);
             rootNode.attachChild(boxGeom);
+        }
+
+        private Quaternion calcRotation(Vector3f one, Vector3f two)
+        {
+            Vector3f crossProdVec = one.cross(two);
+            float angle = one.angleBetween(two);
+
+            return new Quaternion().fromAngleAxis(angle, crossProdVec);
         }
 
         private Vector3f calcClosestPointOnLine(Vector3f lineStart, Vector3f lineEnd, Vector3f point)
