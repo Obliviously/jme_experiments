@@ -19,13 +19,11 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
-import com.jme3.scene.shape.Box;
+import com.jme3.scene.shape.Line;
 import com.jme3.scene.shape.Sphere;
 import examples.EditModeExample;
 import java.util.ArrayList;
@@ -145,37 +143,34 @@ public class EditStartAppState extends BaseAppState
 
                         switch (newSelectedVertices.size())
                         {
-                            case 0:
-                                logger.log(Level.INFO, "Selection is invalid!");
-                                break;
-                            case 1:
-                                System.out.println("1");
-                                currSelectedVertices = tempVertices;
-                                VertexUtils.changeColorOfVertices(closest.getGeometry(), currSelectedVertices);
+                        case 0:
+                            logger.log(Level.INFO, "Selection is invalid!");
+                            break;
+                        case 1:
+                            currSelectedVertices = tempVertices;
+                            VertexUtils.changeColorOfVertices(closest.getGeometry(), currSelectedVertices);
 
-                                addMark(newSelectedVertices.get(0));
-                                addMark(newContactPoint);
+                            addMark(newSelectedVertices.get(0));
+                            addMark(newContactPoint);
 
-                                addLineBetween(marks.get(marks.size() - 3).getLocalTranslation(), marks.get(marks.size() - 2).getLocalTranslation());
-                                addLineBetween(marks.get(marks.size() - 2).getLocalTranslation(), marks.get(marks.size() - 1).getLocalTranslation());
-                                break;
-                            case 2:
-                                System.out.println("2");
-                                currSelectedVertices = tempVertices;
-                                VertexUtils.changeColorOfVertices(closest.getGeometry(), currSelectedVertices);
+                            addLineBetween(marks.get(marks.size() - 3).getLocalTranslation(), marks.get(marks.size() - 2).getLocalTranslation());
+                            addLineBetween(marks.get(marks.size() - 2).getLocalTranslation(), marks.get(marks.size() - 1).getLocalTranslation());
+                            break;
+                        case 2:
+                            currSelectedVertices = tempVertices;
+                            VertexUtils.changeColorOfVertices(closest.getGeometry(), currSelectedVertices);
 
-                                lastContactPoint = marks.get(marks.size() - 1).getLocalTranslation();
-                                Vector3f closestContactPoint = calcClosestPointOnLine(newSelectedVertices.get(0), newSelectedVertices.get(1), lastContactPoint);
-                                addMark(closestContactPoint);
-                                addMark(newContactPoint);
+                            lastContactPoint = marks.get(marks.size() - 1).getLocalTranslation();
+                            Vector3f closestContactPoint = calcClosestPointOnLine(newSelectedVertices.get(0), newSelectedVertices.get(1), lastContactPoint);
+                            addMark(closestContactPoint);
+                            addMark(newContactPoint);
 
-                                addLineBetween(marks.get(marks.size() - 3).getLocalTranslation(), marks.get(marks.size() - 2).getLocalTranslation());
-                                addLineBetween(marks.get(marks.size() - 2).getLocalTranslation(), marks.get(marks.size() - 1).getLocalTranslation());
-
-                                break;
-                            default:
-                                logger.log(Level.WARNING, "This should not happen!");
-                                break;
+                            addLineBetween(marks.get(marks.size() - 3).getLocalTranslation(), marks.get(marks.size() - 2).getLocalTranslation());
+                            addLineBetween(marks.get(marks.size() - 2).getLocalTranslation(), marks.get(marks.size() - 1).getLocalTranslation());
+                            break;
+                        default:
+                            logger.log(Level.WARNING, "This should not happen!");
+                            break;
                         }
 
                     }
@@ -184,26 +179,14 @@ public class EditStartAppState extends BaseAppState
             }
         }
 
-        private void addLineBetween(Vector3f one, Vector3f two)
+        private void addLineBetween(Vector3f start, Vector3f end)
         {
-            float distance = one.distance(two);
-
-            Mesh box = new Box(distance, 0.01f, 0.01f);
-            Geometry boxGeom = new Geometry("Box", box);
             Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
             mat.setColor("Color", ColorRGBA.Red);
-            boxGeom.setMaterial(mat);
-            boxGeom.setLocalRotation(calcRotation(one.normalize(), two.normalize()));
-            boxGeom.setLocalTranslation(one);
-            rootNode.attachChild(boxGeom);
-        }
-
-        private Quaternion calcRotation(Vector3f one, Vector3f two)
-        {
-            Vector3f crossProdVec = one.cross(two);
-            float angle = one.angleBetween(two);
-
-            return new Quaternion().fromAngleAxis(angle, crossProdVec);
+            Line line = new Line(start, end);
+            Geometry lineGeo = new Geometry("line", line);
+            lineGeo.setMaterial(mat);
+            rootNode.attachChild(lineGeo);
         }
 
         private Vector3f calcClosestPointOnLine(Vector3f lineStart, Vector3f lineEnd, Vector3f point)
