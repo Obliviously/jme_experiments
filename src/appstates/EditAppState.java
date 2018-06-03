@@ -9,17 +9,14 @@ import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
-import com.jme3.input.KeyInput;
-import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
-import com.jme3.input.controls.KeyTrigger;
-import com.jme3.input.controls.MouseAxisTrigger;
-import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import examples.EditModeExample;
 import java.util.ArrayList;
+import model.Boulder;
 import utils.AbstractInputController;
 import utils.MeshUtils;
 import utils.VertexUtils;
@@ -76,7 +73,7 @@ public class EditAppState extends BaseAppState
                     CollisionResult closest = results.getClosestCollision();
                     contactPoint = closest.getContactPoint();
                     selectedVertices = MeshUtils.calcFlatArea(closest);
-                    VertexUtils.changeColorOfVertices(closest.getGeometry(), selectedVertices);
+                    //VertexUtils.changeColorOfVertices(closest.getGeometry(), selectedVertices);
                 }
             }
         }
@@ -93,24 +90,22 @@ public class EditAppState extends BaseAppState
             if (name.equals("MOUSE_LEFT_CLICK") && selectedVertices != null && contactPoint != null)
             {
                 getStateManager().detach(getState(EditAppState.class));
-                getStateManager().attach(new EditStartAppState(contactPoint, selectedVertices));
+
+                Boulder boulder = new Boulder(0, ColorRGBA.Blue);
+                boulder.addMark(contactPoint);
+                getStateManager().attach(new CreateBoulderAppState(boulder, selectedVertices));
             }
         }
 
+        @Override
         public void setUpInput()
         {
-            //MOUSE        
-            app.getInputManager().addMapping("MOUSE_MOVE", new MouseAxisTrigger(MouseInput.AXIS_X, false));
-            app.getInputManager().addMapping("MOUSE_MOVE", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
-            app.getInputManager().addMapping("MOUSE_LEFT_CLICK", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
             app.getInputManager().addListener(this, "MOUSE_LEFT_CLICK");
             app.getInputManager().addListener(this, "MOUSE_MOVE");
-
-            //KEYBOARD
-            app.getInputManager().addMapping("SWITCH_MODE", new KeyTrigger(KeyInput.KEY_TAB));
             app.getInputManager().addListener(this, "SWITCH_MODE");
         }
 
+        @Override
         public void cleanUpInput()
         {
             app.getInputManager().removeListener(this);

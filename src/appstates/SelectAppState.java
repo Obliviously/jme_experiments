@@ -9,12 +9,8 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.collision.CollisionResults;
-import com.jme3.input.KeyInput;
-import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
-import com.jme3.input.controls.KeyTrigger;
-import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.math.Ray;
 import examples.EditModeExample;
 import utils.AbstractInputController;
@@ -59,13 +55,7 @@ public class SelectAppState extends BaseAppState
         @Override
         public void setUpInput()
         {
-            //MOUSE        
-            app.getInputManager().addMapping("MOUSE_MOVE", new MouseAxisTrigger(MouseInput.AXIS_X, true));
-            app.getInputManager().addMapping("MOUSE_MOVE", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
             app.getInputManager().addListener(this, "MOUSE_MOVE");
-
-            //KEYBOURD
-            app.getInputManager().addMapping("SWITCH_MODE", new KeyTrigger(KeyInput.KEY_TAB));
             app.getInputManager().addListener(this, "SWITCH_MODE");
         }
 

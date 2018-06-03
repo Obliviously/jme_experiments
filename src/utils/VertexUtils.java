@@ -49,4 +49,27 @@ public class VertexUtils
         }
         mesh.setBuffer(VertexBuffer.Type.Color, 4, colorArray);
     }
+    
+    public static Vector3f calcClosestPointOnLine(Vector3f lineStart, Vector3f lineEnd, Vector3f point)
+        {
+            Vector3f closestPoint = lineStart;
+            Vector3f line = lineStart.subtract(lineEnd);
+            float linePosition = 0.1f;
+
+            if (lineStart.distance(lineEnd) < lineStart.add(line.mult(linePosition)).distance(lineEnd))
+            {
+                lineStart = lineEnd;
+            }
+
+            double lastDistance = Double.MAX_VALUE;
+            double currDistance = lineStart.distance(point);
+
+            for (int i = 1; currDistance < lastDistance; i++)
+            {
+                lastDistance = currDistance;
+                closestPoint = lineStart.add(line.mult(linePosition * i));
+                currDistance = point.distance(closestPoint);
+            }
+            return closestPoint.subtract(line.mult(linePosition));
+        }
 }

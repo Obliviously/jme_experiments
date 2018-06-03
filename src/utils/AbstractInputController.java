@@ -11,8 +11,14 @@ package utils;
  */
 public abstract class AbstractInputController
 {
+    /**
+     * Initialize all listeners
+     */
     public abstract void setUpInput();
 
+    /**
+     * Remove all listeners
+     */
     public abstract void cleanUpInput();
 
 }

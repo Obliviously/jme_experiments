@@ -1,9 +1,12 @@
 package examples;
 
-import appstates.EditAppState;
 import appstates.SelectAppState;
 import com.jme3.app.SimpleApplication;
-import com.jme3.app.state.BaseAppState;
+import com.jme3.input.KeyInput;
+import com.jme3.input.MouseInput;
+import com.jme3.input.controls.KeyTrigger;
+import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
@@ -32,15 +35,11 @@ public class EditModeExample extends SimpleApplication
     @Override
     public void simpleInitApp()
     {
+        //innitialize input mappings
+        initInputMappings();
+
         //load world
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setBoolean("VertexColor", true);
-        Geometry boxGeo;
-        Node box = (Node) assetManager.loadModel("Models/box.blend");
-        boxGeo = (Geometry) (((Node) ((Node) box.getChild(0)).getChild(0)).getChild(0));
-        boxGeo.setMaterial(mat);
-        rootNode.attachChild(box);
-        VertexUtils.changeColorOfVertices(boxGeo, null);
+        initWorld();
 
         //initial state
         this.getStateManager().attach(new SelectAppState());
@@ -56,5 +55,25 @@ public class EditModeExample extends SimpleApplication
     public void simpleRender(RenderManager rm)
     {
         //add render code
+    }
+
+    private void initWorld()
+    {
+        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setBoolean("VertexColor", true);
+        Geometry boxGeo;
+        Node box = (Node) assetManager.loadModel("Models/box.blend");
+        boxGeo = (Geometry) (((Node) ((Node) box.getChild(0)).getChild(0)).getChild(0));
+        boxGeo.setMaterial(mat);
+        rootNode.attachChild(box);
+        VertexUtils.changeColorOfVertices(boxGeo, null);
+    }
+
+    private void initInputMappings()
+    {
+        inputManager.addMapping("MOUSE_MOVE", new MouseAxisTrigger(MouseInput.AXIS_X, false));
+        inputManager.addMapping("MOUSE_MOVE", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
+        inputManager.addMapping("MOUSE_LEFT_CLICK", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+        inputManager.addMapping("SWITCH_MODE", new KeyTrigger(KeyInput.KEY_TAB));
     }
 }
