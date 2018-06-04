@@ -10,8 +10,6 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.system.AppSettings;
-import enums.State;
-import java.awt.event.KeyListener;
 import utils.MeshUtils;
 import utils.VertexUtils;
 

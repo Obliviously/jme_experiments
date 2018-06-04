@@ -7,17 +7,18 @@ package model;
 
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  *
  * @author Fabian Rauscher
  */
-public class Boulder
+public class Boulder implements Serializable
 {
-    private int id;
+    private final int id;
     private ColorRGBA color;
-    private ArrayList<Vector3f> marks = new ArrayList<>();
+    private final ArrayList<Vector3f> marks = new ArrayList<>();
 
     public Boulder(int id, ColorRGBA color)
     {
@@ -47,5 +48,10 @@ public class Boulder
     public ColorRGBA getColor()
     {
         return this.color;
+    }
+
+    public void setColor(ColorRGBA color)
+    {
+        this.color = color;
     }
 }
